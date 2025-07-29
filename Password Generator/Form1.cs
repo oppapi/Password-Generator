@@ -8,15 +8,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Net.Mime.MediaTypeNames;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
 
 namespace Password_Generator
 {
     public partial class Form1 : Form
     {
         private StringBuilder wordPool = new StringBuilder();
+        private Random rand = new Random();
         public Form1()
         {
-            InitializeComponent();
+             InitializeComponent();
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
@@ -60,22 +62,88 @@ namespace Password_Generator
 
         private void btnGenerate_Click(object sender, EventArgs e)
         {
-            if (chkLowercase.Checked) { wordPool.Append("abcdefghijklmnopqrstuvwxyz"); }
-            if (chkUppercase.Checked) { wordPool.Append("ABCDEFGHIJKLMNOPQRSTUVWXYZ"); }
-            if (chkNumbers.Checked) { wordPool.Append("0123456789"); };
-            if (chkSymbols.Checked) { wordPool.Append("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"); }
-            if (txtLength.Text != "")
+            if (check())
             {
-                txtPassword.Text = generatePass(wordPool.ToString());
+                string finalPassword = "";
+                int length = Convert.ToInt32(txtLength.Text);
+                if (txtKeyword.Text != "")
+                {
+                    length -= txtKeyword.Text.Length;
+                    finalPassword = keywordScrabble(txtKeyword.Text);
+                }
+                if (chkLowercase.Checked) { wordPool.Append("abcdefghijklmnopqrstuvwxyz"); }
+                if (chkUppercase.Checked) { wordPool.Append("ABCDEFGHIJKLMNOPQRSTUVWXYZ"); }
+                if (chkNumbers.Checked) { wordPool.Append("0123456789"); };
+                if (chkSymbols.Checked) { wordPool.Append("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"); }
+                finalPassword += generatePass(wordPool.ToString(), length);
+                txtPassword.Text = finalPassword;
             }
         }
-
-        public String generatePass(string words)
+        private bool check()
         {
-            Random rand = new Random();
+            if (txtLength.Text == "") { return false; }
+            if (txtKeyword.Text != "")
+            {
+                if (!(Convert.ToInt32(txtLength.Text) >= txtKeyword.Text.Length)) { return false; }
+                else { return true; }
+            }
+            else
+            {
+                return true;
+            }
+        }
+        private string keywordScrabble(string keyword)
+        {
+            Dictionary<char, string[]> leetMap = new Dictionary<char, string[]>()
+            {
+                { 'a', new[] { "@", "4" } },
+                { 'b', new[] { "8" } },
+                { 'c', new[] { "(", "<" } },
+                { 'e', new[] { "3" } },
+                { 'g', new[] { "6", "9" } },
+                { 'h', new[] { "#" } },
+                { 'i', new[] { "1", "!" } },
+                { 'l', new[] { "1", "|" } },
+                { 'o', new[] { "0" } },
+                { 's', new[] { "$", "5" } },
+                { 't', new[] { "7", "+" } },
+                { 'z', new[] { "2" } },
+
+                { 'A', new[] { "@", "4" } },
+                { 'B', new[] { "8" } },
+                { 'C', new[] { "(", "<" } },
+                { 'E', new[] { "3" } },
+                { 'G', new[] { "6", "9" } },
+                { 'H', new[] { "#" } },
+                { 'I', new[] { "1", "!" } },
+                { 'L', new[] { "1", "|" } },
+                { 'O', new[] { "0" } },
+                { 'S', new[] { "$", "5" } },
+                { 'T', new[] { "7", "+" } },
+                { 'Z', new[] { "2" } },
+            };
+            StringBuilder leet = new StringBuilder();
+            foreach (char letter in keyword)
+            {
+                if (leetMap.ContainsKey(letter))
+                {
+                    string[] replacements = leetMap[letter];
+                    leet.Append(replacements[rand.Next(replacements.Length)]);
+                }
+                else
+                {
+                    leet.Append(letter);
+                }
+            }
+            string leeted = leet.ToString();
+            leet.Clear();
+            return leeted;
+        }
+
+        public string generatePass(string words, int length)
+        {
             StringBuilder generatedPassword = new StringBuilder();
 
-            int length = Convert.ToInt32(txtLength.Text);
             for (int i = 0; i < length; i++)
             {
                 generatedPassword.Append(words[rand.Next(words.Length)]);
